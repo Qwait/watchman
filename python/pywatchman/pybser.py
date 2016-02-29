@@ -31,31 +31,84 @@ import ctypes
 import struct
 import sys
 
-BSER_ARRAY = '\x00'
-BSER_OBJECT = '\x01'
-BSER_STRING = '\x02'
-BSER_INT8 = '\x03'
-BSER_INT16 = '\x04'
-BSER_INT32 = '\x05'
-BSER_INT64 = '\x06'
-BSER_REAL = '\x07'
-BSER_TRUE = '\x08'
-BSER_FALSE = '\x09'
-BSER_NULL = '\x0a'
-BSER_TEMPLATE = '\x0b'
-BSER_SKIP = '\x0c'
+# Boolean constant for checking if Python is version 2
+PY2 = sys.version_info[0] == 2
 
-# Leave room for the serialization header, which includes
-# our overall length.  To make things simpler, we'll use an
-# int32 for the header
-EMPTY_HEADER = "\x00\x01\x05\x00\x00\x00\x00"
+# Boolean constant for checking if Python is version 3
+PY3 = sys.version_info[0] == 3
 
-# Python 3 conditional for supporting Python 2's int/long types
-if sys.version_info > (3,):
+if PY2:
+    BSER_ARRAY = '\x00'
+    BSER_OBJECT = '\x01'
+    BSER_STRING = '\x02'
+    BSER_INT8 = '\x03'
+    BSER_INT16 = '\x04'
+    BSER_INT32 = '\x05'
+    BSER_INT64 = '\x06'
+    BSER_REAL = '\x07'
+    BSER_TRUE = '\x08'
+    BSER_FALSE = '\x09'
+    BSER_NULL = '\x0a'
+    BSER_TEMPLATE = '\x0b'
+    BSER_SKIP = '\x0c'
+
+    # Leave room for the serialization header, which includes
+    # our overall length.  To make things simpler, we'll use an
+    # int32 for the header
+    EMPTY_HEADER = "\x00\x01\x05\x00\x00\x00\x00"
+
+def _py3_constant_convert(constant):
+    return int.from_bytes(constant, byteorder=sys.byteorder)
+
+if PY3:
+    # Python 3 needs pack variables to be bytes
+    BSER_ARRAY = b'\x00'
+    BSER_OBJECT = b'\x01'
+    BSER_STRING = b'\x02'
+    BSER_INT8 = b'\x03'
+    BSER_INT16 = b'\x04'
+    BSER_INT32 = b'\x05'
+    BSER_INT64 = b'\x06'
+    BSER_REAL = b'\x07'
+    BSER_TRUE = b'\x08'
+    BSER_FALSE = b'\x09'
+    BSER_NULL = b'\x0a'
+    BSER_TEMPLATE = b'\x0b'
+    BSER_SKIP = b'\x0c'
+    EMPTY_HEADER = b'\x00\x01\x05\x00\x00\x00\x00'
+
+    # Python 3 returns int from byte strings
+    # Conversion constants, to make decoding for Python 2 / Python 3 easier
+    # These are computed at runtime to allow for easier constant change; if needed
+    BSER_ARRAY_INT = _py3_constant_convert(BSER_ARRAY)
+    BSER_OBJECT_INT = _py3_constant_convert(BSER_OBJECT)
+    BSER_STRING_INT = _py3_constant_convert(BSER_STRING)
+    BSER_INT8_INT = _py3_constant_convert(BSER_INT8)
+    BSER_INT16_INT = _py3_constant_convert(BSER_INT16)
+    BSER_INT32_INT = _py3_constant_convert(BSER_INT32)
+    BSER_INT64_INT = _py3_constant_convert(BSER_INT64)
+    BSER_REAL_INT = _py3_constant_convert(BSER_REAL)
+    BSER_TRUE_INT = _py3_constant_convert(BSER_TRUE)
+    BSER_FALSE_INT = _py3_constant_convert(BSER_FALSE)
+    BSER_NULL_INT = _py3_constant_convert(BSER_NULL)
+    BSER_TEMPLATE_INT = _py3_constant_convert(BSER_TEMPLATE)
+    BSER_SKIP_INT = _py3_constant_convert(BSER_SKIP)
+    EMPTY_HEADER_INT = _py3_constant_convert(EMPTY_HEADER)
+
+    # Python 3 conditionals for supporting Python 2's types
+
+    # The long (L) character was removed in Python 3
     long = int
+
+    # unicode type was removed Python 3
+    # all strings in Python 3 are unicode
+    unicode = str
 
 def _int_size(x):
     """Return the smallest size int that can store the value"""
+    #if PY3:
+    #  x = int.from_bytes(x, byteorder=sys.byteorder)
+
     if -0x80 <= x <= 0x7F:
         return 1
     elif -0x8000 <= x <= 0x7FFF:
@@ -66,7 +119,6 @@ def _int_size(x):
         return 8
     else:
         raise RuntimeError('Cannot represent value: ' + str(x))
-
 
 class _bser_buffer(object):
 
@@ -161,6 +213,11 @@ class _bser_buffer(object):
                 self.append_recursive(v)
         elif isinstance(val, collections.Iterable) and isinstance(val, collections.Sized):
             val_len = len(val)
+
+            # Python 3 requires pack_into arguments to be bytes
+            # if PY3:
+            #    val_len = bytes(val_len, 'ascii')
+
             size = _int_size(val_len)
             needed = 2 + size
             self.ensure_size(needed)
@@ -189,12 +246,7 @@ def dumps(obj):
     struct.pack_into('=i', bser_buf.buf, 3, obj_len)
     return bser_buf.buf.raw[:bser_buf.wpos]
 
-
-def _bunser_int(buf, pos):
-    try:
-        int_type = buf[pos]
-    except IndexError:
-        raise ValueError('Invalid bser int encoding, pos out of range')
+def _py2_bunser_int(int_type):
     if int_type == BSER_INT8:
         needed = 2
         fmt = '=b'
@@ -209,6 +261,43 @@ def _bunser_int(buf, pos):
         fmt = '=q'
     else:
         raise ValueError('Invalid bser int encoding 0x%02x' % int(int_type))
+
+    return needed, fmt
+
+def _py3_bunser_int(int_type):
+    if int_type == BSER_INT8_INT:
+        needed = 2
+        fmt = '=b'
+    elif int_type == BSER_INT16_INT:
+        needed = 3
+        fmt = '=h'
+    elif int_type == BSER_INT32_INT:
+        needed = 5
+        fmt = '=i'
+    elif int_type == BSER_INT64_INT:
+        needed = 9
+        fmt = '=q'
+    else:
+        raise ValueError('Invalid bser int encoding 0x%02x' % int(int_type))
+
+    return needed, fmt
+
+def _bunser_int(buf, pos):
+    try:
+        int_type = buf[pos]
+    except IndexError:
+        raise ValueError('Invalid bser int encoding, pos out of range')
+
+    if PY2:
+        # int_type is an str in Python 2
+        needed, fmt = _py2_bunser_int(int_type)
+
+    if PY3:
+        # int_type is an int in Python 3
+        needed, fmt = _py3_bunser_int(int_type)
+
+    # ('type int_type', <type 'str'>, '\x03')
+
     int_val = struct.unpack_from(fmt, buf, pos + 1)[0]
     return (int_val, pos + needed)
 
@@ -314,9 +403,7 @@ def _bunser_template(buf, pos, mutable=True):
         arr.append(obj)
     return arr, pos
 
-
-def _bser_loads_recursive(buf, pos, mutable=True):
-    val_type = buf[pos]
+def _py2_bser_loads_recursive(val_type, buf, pos, mutable=True):
     if (val_type == BSER_INT8 or val_type == BSER_INT16 or
         val_type == BSER_INT32 or val_type == BSER_INT64):
         return _bunser_int(buf, pos)
@@ -340,6 +427,38 @@ def _bser_loads_recursive(buf, pos, mutable=True):
     else:
         raise RuntimeError('unhandled bser opcode 0x%02x' % (val_type,))
 
+def _py3_bser_loads_recursive(val_type, buf, pos, mutable=True):
+    if (val_type == BSER_INT8_INT or val_type == BSER_INT16_INT or
+        val_type == BSER_INT32_INT or val_type == BSER_INT64_INT):
+        return _bunser_int(buf, pos)
+    elif val_type == BSER_REAL_INT:
+        val = struct.unpack_from('=d', buf, pos + 1)[0]
+        return (val, pos + 9)
+    elif val_type == BSER_TRUE_INT:
+        return (True, pos + 1)
+    elif val_type == BSER_FALSE_INT:
+        return (False, pos + 1)
+    elif val_type == BSER_NULL_INT:
+        return (None, pos + 1)
+    elif val_type == BSER_STRING_INT:
+        return _bunser_string(buf, pos)
+    elif val_type == BSER_ARRAY_INT:
+        return _bunser_array(buf, pos, mutable)
+    elif val_type == BSER_OBJECT_INT:
+        return _bunser_object(buf, pos, mutable)
+    elif val_type == BSER_TEMPLATE_INT:
+        return _bunser_template(buf, pos, mutable)
+    else:
+        raise RuntimeError('unhandled bser opcode 0x%02x' % (val_type,))
+
+def _bser_loads_recursive(buf, pos, mutable=True):
+    val_type = buf[pos]
+
+    if PY2:
+        return _py2_bser_loads_recursive(val_type, buf, pos, mutable)
+
+    if PY3:
+        return _py3_bser_loads_recursive(val_type, buf, pos, mutable)
 
 def pdu_len(buf):
     if buf[0:2] != EMPTY_HEADER[0:2]:

@@ -31,16 +31,20 @@ import errno
 import math
 import socket
 import subprocess
+import sys
 import time
+
+PY2 = sys.version_info[0] == 2
+PY3 = sys.version_info[0] == 3
 
 # Sometimes it's really hard to get Python extensions to compile,
 # so fall back to a pure Python implementation.
 try:
     import bser
 except ImportError:
-    import pybser as bser
+    from . import pybser as bser
 
-import capabilities
+from . import capabilities
 
 if os.name == 'nt':
     import ctypes
@@ -487,7 +491,12 @@ class BserCodec(Codec):
             buf.append(self.transport.readBytes(elen - rlen))
             rlen += len(buf[-1])
 
-        response = ''.join(buf)
+        if PY2:
+            response = ''.join(buf)
+
+        if PY3:
+            response = b''.join(buf)
+
         try:
             res = self._loads(response)
             return res

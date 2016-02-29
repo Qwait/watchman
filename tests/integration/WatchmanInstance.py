@@ -12,6 +12,12 @@ import uuid
 import traceback
 import sys
 
+# Boolean constant for checking if Python is version 2
+PY2 = sys.version_info[0] == 2
+
+# Boolean constant for checking if Python is version 3
+PY3 = sys.version_info[0] == 3
+
 tls = threading.local()
 
 def setSharedInstance(inst):
@@ -76,7 +82,15 @@ class Instance(object):
         for i in range(1, 10):
             try:
                 client = pywatchman.client(sockpath=self.sock_file)
-                self.pid = client.query('get-pid')['pid']
+
+                # Python 2 returns str keys
+                if PY2:
+                    self.pid = client.query('get-pid')['pid']
+
+                # Python 3 returns byte keys
+                if PY3:
+                    self.pid = client.query('get-pid')[b'pid']
+
                 break
             except Exception as e:
                 t, val, tb = sys.exc_info()

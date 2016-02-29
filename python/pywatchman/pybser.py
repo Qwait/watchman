@@ -106,9 +106,6 @@ if PY3:
 
 def _int_size(x):
     """Return the smallest size int that can store the value"""
-    #if PY3:
-    #  x = int.from_bytes(x, byteorder=sys.byteorder)
-
     if -0x80 <= x <= 0x7F:
         return 1
     elif -0x8000 <= x <= 0x7FFF:
@@ -290,8 +287,6 @@ def _bunser_int(buf, pos):
     if PY3:
         # int_type is an int in Python 3
         needed, fmt = _py3_bunser_int(int_type)
-
-    # ('type int_type', <type 'str'>, '\x03')
 
     int_val = struct.unpack_from(fmt, buf, pos + 1)[0]
     return (int_val, pos + needed)

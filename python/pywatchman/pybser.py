@@ -213,11 +213,6 @@ class _bser_buffer(object):
                 self.append_recursive(v)
         elif isinstance(val, collections.Iterable) and isinstance(val, collections.Sized):
             val_len = len(val)
-
-            # Python 3 requires pack_into arguments to be bytes
-            # if PY3:
-            #    val_len = bytes(val_len, 'ascii')
-
             size = _int_size(val_len)
             needed = 2 + size
             self.ensure_size(needed)

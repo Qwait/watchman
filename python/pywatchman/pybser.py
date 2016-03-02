@@ -31,11 +31,8 @@ import ctypes
 import struct
 import sys
 
-# Boolean constant for checking if Python is version 2
-PY2 = sys.version_info[0] == 2
-
-# Boolean constant for checking if Python is version 3
-PY3 = sys.version_info[0] == 3
+from compat import PY2
+from compat import PY3
 
 if PY2:
     BSER_ARRAY = '\x00'

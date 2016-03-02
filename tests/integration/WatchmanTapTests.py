@@ -61,6 +61,7 @@ class TapExeTestCase(unittest.TestCase):
         plan_pat = re.compile('^1\.\.(\d+)$')
 
         # Now parse the TAP output
+        print('lines stdout', type(lines))
         lines = stdout.replace('\r\n', '\n').split('\n')
         last_test = 0
         diags = None

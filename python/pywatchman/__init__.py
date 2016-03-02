@@ -25,9 +25,9 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from __future__ import print_function
 
 import binascii
-
 import os
 import errno
 import math
@@ -36,11 +36,8 @@ import subprocess
 import sys
 import time
 
-# Boolean constant for checking if Python is version 2
-PY2 = sys.version_info[0] == 2
-
-# Boolean constant for checking if Python is version 3
-PY3 = sys.version_info[0] == 3
+from compat import PY2
+from compat import PY3
 
 # Sometimes it's really hard to get Python extensions to compile,
 # so fall back to a pure Python implementation.
@@ -211,6 +208,9 @@ class Transport(object):
 
         while True:
             b = self.readBytes(4096)
+            if PY3:
+                b = b.decode()
+
             if "\n" in b:
                 result = ''.join(self.buf)
                 (line, b) = b.split("\n", 1)
@@ -245,6 +245,7 @@ class UnixSocketTransport(Transport):
         self.timeout = timeout
 
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+
         try:
             sock.settimeout(self.timeout)
             sock.connect(self.sockpath)
@@ -271,10 +272,11 @@ class UnixSocketTransport(Transport):
             raise SocketTimeout('timed out waiting for response')
 
     def write(self, data):
-        if PY3:
-            data = binascii.b2a_uu(data)
-
         try:
+            if PY3:
+                if isinstance(data, str):
+                    data = data.encode()
+
             self.sock.sendall(data)
         except socket.timeout:
             raise SocketTimeout('timed out sending query command')
@@ -476,7 +478,8 @@ class CLIProcessTransport(Transport):
             self.proc = None
         self._connect()
 
-        print('write data', data, type(data))
+        if PY3:
+            data = data.encode()
 
         res = self.proc.stdin.write(data)
         self.proc.stdin.close()
@@ -762,12 +765,11 @@ class client(object):
         and NOT returned via this method.
         """
 
-        log('calling client.query')
         self._connect()
         try:
             self.sendConn.send(args)
-
             res = self.receive()
+
             while self.isUnilateralResponse(res):
                 res = self.receive()
 

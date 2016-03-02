@@ -11,6 +11,7 @@ import subprocess
 import WatchmanInstance
 import unittest
 
+from compat import PY3
 
 class TestDashJCliOption(unittest.TestCase):
 
@@ -39,6 +40,9 @@ class TestDashJCliOption(unittest.TestCase):
                                 stdin=subprocess.PIPE,
                                 stderr=subprocess.PIPE,
                                 stdout=subprocess.PIPE)
+
+        if PY3:
+            watchman_cmd = watchman_cmd.encode('utf-8')
 
         stdout, stderr = proc.communicate(input=watchman_cmd)
         self.assertEqual(proc.poll(), 0, stderr)

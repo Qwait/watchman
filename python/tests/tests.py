@@ -1,10 +1,17 @@
 #!/usr/bin/env python
 # vim:ts=4:sw=4:et:
+from __future__ import print_function
+
 import inspect
 import unittest
 import os
+import sys
 from pywatchman import bser, pybser, SocketTimeout, WatchmanError
 
+PY3 = sys.version_info[0] == 3
+
+if PY3:
+    long = int
 
 class TestSocketTimeout(unittest.TestCase):
     def test_exception_handling(self):
@@ -40,16 +47,16 @@ class TestBSERDump(unittest.TestCase):
 
     def roundtrip(self, val, mutable=True):
         enc = self.bser_mod.dumps(val)
-        print "# %s  -->  %s" % (val, enc.encode('hex'))
+        print("# %s  -->  %s" % (val, enc.encode('hex')))
         dec = self.bser_mod.loads(enc, mutable)
         self.assertEquals(val, dec)
 
     def munged(self, val, munged):
         enc = self.bser_mod.dumps(val)
         if isinstance(val, unicode):
-            print "# %s  -->  %s" % (val.encode('utf-8'), enc.encode('hex'))
+            print("# %s  -->  %s" % (val.encode('utf-8'), enc.encode('hex')))
         else:
-            print "# %s  -->  %s" % (val, enc.encode('hex'))
+            print("# %s  -->  %s" % (val, enc.encode('hex')))
         dec = self.bser_mod.loads(enc)
         self.assertEquals(munged, dec)
 
@@ -64,7 +71,7 @@ class TestBSERDump(unittest.TestCase):
         self.roundtrip(-0x80)
         self.roundtrip(-0x8000)
         self.roundtrip(-0x80000000)
-        self.roundtrip(-0x8000000000000000L)
+        self.roundtrip(long(-0x8000000000000000))
 
     def test_float(self):
         self.roundtrip(1.5)

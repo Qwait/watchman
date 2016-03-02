@@ -82,14 +82,7 @@ class Instance(object):
         for i in range(1, 10):
             try:
                 client = pywatchman.client(sockpath=self.sock_file)
-
-                # Python 2 returns str keys
-                if PY2:
-                    self.pid = client.query('get-pid')['pid']
-
-                # Python 3 returns byte keys
-                if PY3:
-                    self.pid = client.query('get-pid')[b'pid']
+                self.pid = client.query('get-pid')[b'pid']
 
                 break
             except Exception as e:

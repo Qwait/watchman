@@ -21,7 +21,7 @@ class TestPerms(WatchmanTestCase.WatchmanTestCase):
         res = self.watchmanCommand('query', root, {
             'expression': ['exists'],
             'fields': ['name']})
-        self.assertRegexpMatches(res['warning'],
+        self.assertRegexpMatches(res[b'warning'],
                                  'Marking this portion of the tree deleted')
 
     @unittest.skipIf(os.name == 'nt' or os.geteuid() == 0, "win or root")

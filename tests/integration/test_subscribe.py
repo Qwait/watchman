@@ -128,7 +128,7 @@ class TestSubscribe(WatchmanTestCase.WatchmanTestCase):
         # fake an hg control dir
         os.mkdir(os.path.join(root, '.hg'))
         self.watchmanCommand('watch', root)
-        self.assertFileList(root, files=['.hg'])
+        self.assertFileList(root, files=[b'.hg'])
 
         sub = self.watchmanCommand('subscribe', root, 'defer', {
             'fields': ['name', 'exists'],
@@ -161,7 +161,7 @@ class TestSubscribe(WatchmanTestCase.WatchmanTestCase):
         # fake an hg control dir
         os.mkdir(os.path.join(root, '.hg'))
         self.watchmanCommand('watch', root)
-        self.assertFileList(root, files=['.hg'])
+        self.assertFileList(root, files=[b'.hg'])
 
         sub = self.watchmanCommand('subscribe', root, 'nodefer', {
             'fields': ['name', 'exists'],
@@ -193,7 +193,7 @@ class TestSubscribe(WatchmanTestCase.WatchmanTestCase):
         self.touchRelative(root, 'b')
 
         self.watchmanCommand('watch', root)
-        self.assertFileList(root, files=['a', 'a/lemon', 'b'])
+        self.assertFileList(root, files=[b'a', b'a/lemon', b'b'])
 
         sub = self.watchmanCommand('subscribe', root, 'myname', {
             'fields': ['name']})

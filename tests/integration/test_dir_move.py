@@ -26,7 +26,7 @@ class TestDirMove(WatchmanTestCase.WatchmanTestCase):
 
         self.build_under(root, 'dir')
         self.watchmanCommand('watch', root)
-        self.assertFileList(root, ['dir', 'dir/a'])
+        self.assertFileList(root, [b'dir', b'dir/a'])
 
         # build out a replacement dir
         self.build_under(root, 'alt')
@@ -44,7 +44,7 @@ class TestDirMove(WatchmanTestCase.WatchmanTestCase):
 
         self.build_under(root, 'dir')
         self.watchmanCommand('watch', root)
-        self.assertFileList(root, ['dir', 'dir/a'])
+        self.assertFileList(root, [b'dir', b'dir/a'])
 
         shutil.rmtree(dir_of_interest)
         self.build_under(root, 'dir', latency=1)

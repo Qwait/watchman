@@ -205,7 +205,16 @@ class _bser_buffer(object):
             else:
                 raise RuntimeError('Cannot represent this mapping value')
             self.wpos += needed
-            for k, v in val.iteritems():
+
+            if PY2:
+                iterator = val.iteritems()
+
+            # Python 3 removed dict.iteritems()
+            # dict.items() returns an iterator
+            if PY3:
+                iterator = val.items()
+
+            for k, v in iterator:
                 self.append_string(k)
                 self.append_recursive(v)
         elif isinstance(val, collections.Iterable) and isinstance(val, collections.Sized):

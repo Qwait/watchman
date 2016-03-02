@@ -15,7 +15,7 @@ class TestSince(WatchmanTestCase.WatchmanTestCase):
         self.touchRelative(root, '222')
 
         self.watchmanCommand('watch', root)
-        self.assertFileList(root, ['111', '222'])
+        self.assertFileList(root, [b'111', b'222'])
 
         # Create a cursor for this state
         self.watchmanCommand('since', root, 'n:foo')
@@ -38,7 +38,7 @@ class TestSince(WatchmanTestCase.WatchmanTestCase):
         self.touchRelative(foo_dir, '111')
         self.waitForSync(root)
 
-        self.assertFileList(root, cursor='n:foo', files=['foo', 'foo/111'])
+        self.assertFileList(root, cursor='n:foo', files=[b'foo', b'foo/111'])
 
         bar_dir = os.path.join(foo_dir, 'bar')
         os.mkdir(bar_dir)
@@ -61,7 +61,7 @@ class TestSince(WatchmanTestCase.WatchmanTestCase):
     def test_sinceRelativeRoot(self):
         root = self.mkdtemp()
         self.watchmanCommand('watch', root)
-        clock = self.watchmanCommand('clock', root)['clock']
+        clock = self.watchmanCommand('clock', root)[b'clock']
 
         self.touchRelative(root, 'a')
         os.mkdir(os.path.join(root, 'subdir'))
@@ -134,7 +134,7 @@ class TestSince(WatchmanTestCase.WatchmanTestCase):
 
         res = self.watchmanCommand('query', root, {
             'fields': ['name']})
-        self.assertTrue(res['is_fresh_instance'])
+        self.assertTrue(res[b'is_fresh_instance'])
         self.assertEqual(res['files'], ['111'])
 
         # relative clock value, fresh instance
@@ -194,7 +194,7 @@ class TestSince(WatchmanTestCase.WatchmanTestCase):
 
         res = self.watchmanCommand('query', root, {
             'fields': ['name']})
-        self.assertTrue(res['is_fresh_instance'])
+        self.assertTrue(res[b'is_fresh_instance'])
         self.assertEqual(res['files'], ['111'])
 
         clock = res['clock']
@@ -218,7 +218,7 @@ class TestSince(WatchmanTestCase.WatchmanTestCase):
         root = self.mkdtemp()
         self.watchmanCommand('watch', root)
         self.touchRelative(root, '111')
-        self.assertFileList(root, ['111'])
+        self.assertFileList(root, [b'111'])
 
         res = self.watchmanCommand('query', root, {
             'fields': ['name']})

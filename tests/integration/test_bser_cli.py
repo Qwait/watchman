@@ -76,4 +76,4 @@ class TestDashJCliOption(unittest.TestCase):
         self.assertEqual(proc.poll(), 0, stderr)
         # the response should be bser to match our input
         result = bser.loads(stdout)
-        self.assertEqual(result['sockname'], sockname, stdout.encode('hex'))
+        self.assertEqual(result[b'sockname'], sockname, stdout.encode('hex'))

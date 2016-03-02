@@ -26,6 +26,8 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import binascii
+
 import os
 import errno
 import math
@@ -269,6 +271,9 @@ class UnixSocketTransport(Transport):
             raise SocketTimeout('timed out waiting for response')
 
     def write(self, data):
+        if PY3:
+            data = binascii.b2a_uu(data)
+
         try:
             self.sock.sendall(data)
         except socket.timeout:
@@ -470,6 +475,9 @@ class CLIProcessTransport(Transport):
             self.closed = False
             self.proc = None
         self._connect()
+
+        print('write data', data, type(data))
+
         res = self.proc.stdin.write(data)
         self.proc.stdin.close()
         self.closed = True

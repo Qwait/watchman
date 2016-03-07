@@ -369,8 +369,16 @@ def _bunser_object(buf, pos, mutable=True):
 
 
 def _bunser_template(buf, pos, mutable=True):
-    if buf[pos + 1] != BSER_ARRAY:
-        raise RuntimeError('Expect ARRAY to follow TEMPLATE')
+    val = buf[pos + 1]
+
+    if PY2:
+        if val != BSER_ARRAY:
+            raise RuntimeError('Expect ARRAY to follow TEMPLATE')
+
+    if PY3:
+        if val != BSER_ARRAY_INT:
+            raise RuntimeError('Expect ARRAY to follow TEMPLATE')
+
     keys, pos = _bunser_array(buf, pos + 1)
     nitems, pos = _bunser_int(buf, pos)
     arr = []
@@ -457,14 +465,20 @@ def _bser_loads_recursive(buf, pos, mutable=True):
         return _py3_bser_loads_recursive(val_type, buf, pos, mutable)
 
 def pdu_len(buf):
-    if buf[0:2] != EMPTY_HEADER[0:2]:
+    val = buf[0:2]
+
+    # print('pdu_len', val)
+
+    if val != EMPTY_HEADER[0:2]:
         raise RuntimeError('Invalid BSER header')
+
     expected_len, pos = _bunser_int(buf, 2)
     return expected_len + pos
 
 
 def loads(buf, mutable=True):
     if buf[0:2] != EMPTY_HEADER[0:2]:
+        print('loads', buf[0:2], EMPTY_HEADER[0:2], buf[0:2] == EMPTY_HEADER[0:2])
         raise RuntimeError('Invalid BSER header')
     expected_len, pos = _bunser_int(buf, 2)
     if len(buf) != expected_len + pos:

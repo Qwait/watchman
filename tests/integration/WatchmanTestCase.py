@@ -12,6 +12,12 @@ import WatchmanInstance
 import copy
 import sys
 
+from compat import PY2
+from compat import PY3
+
+if PY3:
+    unicode = str
+
 def norm_path(name):
     return os.path.normcase(os.path.normpath(name))
 
@@ -231,7 +237,14 @@ class WatchmanTestCase(unittest.TestCase):
                 sub['files'] = files
             return sub
 
-        return map(norm_sub, data)
+        m = map(norm_sub, data)
+
+        if PY2:
+            return m
+
+        # Python 3 maps return iterators
+        if PY3:
+            return list(m)
 
     def findSubscriptionContainingFile(self, subdata, filename):
         filename = norm_path(filename)

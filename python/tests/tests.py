@@ -2,16 +2,20 @@
 # vim:ts=4:sw=4:et:
 from __future__ import print_function
 
+import binascii
 import inspect
 import unittest
 import os
 import sys
 from pywatchman import bser, pybser, SocketTimeout, WatchmanError
 
+PY2 = sys.version_info[0] == 2
+
 PY3 = sys.version_info[0] == 3
 
 if PY3:
     long = int
+    unicode = str
 
 class TestSocketTimeout(unittest.TestCase):
     def test_exception_handling(self):
@@ -47,16 +51,31 @@ class TestBSERDump(unittest.TestCase):
 
     def roundtrip(self, val, mutable=True):
         enc = self.bser_mod.dumps(val)
-        print("# %s  -->  %s" % (val, enc.encode('hex')))
+
+        if PY2:
+            print("# %s  -->  %s" % (val, enc.encode('hex')))
+
+        if PY3:
+            print("# %s  -->  %s" % (val, binascii.hexlify(enc)))
+
         dec = self.bser_mod.loads(enc, mutable)
         self.assertEquals(val, dec)
 
     def munged(self, val, munged):
         enc = self.bser_mod.dumps(val)
         if isinstance(val, unicode):
-            print("# %s  -->  %s" % (val.encode('utf-8'), enc.encode('hex')))
+            if PY2:
+                print("# %s  -->  %s" % (val.encode('utf-8'), enc.encode('hex')))
+
+            if PY3:
+                print("# %s  -->  %s" % (val.encode('utf-8'), binascii.hexlify(enc)))
         else:
-            print("# %s  -->  %s" % (val, enc.encode('hex')))
+            if PY2:
+                print("# %s  -->  %s" % (val, enc.encode('hex')))
+
+            if PY3:
+                print("# %s  -->  %s" % (val, binascii.hexlify(enc)))
+
         dec = self.bser_mod.loads(enc)
         self.assertEquals(munged, dec)
 

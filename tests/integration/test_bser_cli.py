@@ -10,6 +10,7 @@ from pywatchman import bser
 import subprocess
 import WatchmanInstance
 import unittest
+import binascii
 
 from compat import PY3
 
@@ -47,7 +48,7 @@ class TestDashJCliOption(unittest.TestCase):
         stdout, stderr = proc.communicate(input=watchman_cmd)
         self.assertEqual(proc.poll(), 0, stderr)
         # the response should be json because that is the default
-        result = json.loads(stdout)
+        result = json.loads(stdout.decode('utf-8'))
         self.assertEqual(result['sockname'], sockname)
 
     def test_jsonInputNoNewLine(self):
@@ -80,4 +81,9 @@ class TestDashJCliOption(unittest.TestCase):
         self.assertEqual(proc.poll(), 0, stderr)
         # the response should be bser to match our input
         result = bser.loads(stdout)
-        self.assertEqual(result[b'sockname'], sockname, stdout.encode('hex'))
+
+        if PY2:
+            self.assertEqual(result[b'sockname'], sockname, stdout.encode('hex'))
+
+        if PY3:
+            self.assertEqual(result[b'sockname'], sockname, binascii.hexlify(stdout))

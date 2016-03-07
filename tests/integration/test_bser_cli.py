@@ -12,6 +12,7 @@ import WatchmanInstance
 import unittest
 import binascii
 
+from compat import PY2
 from compat import PY3
 
 class TestDashJCliOption(unittest.TestCase):

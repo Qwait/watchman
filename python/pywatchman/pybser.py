@@ -465,11 +465,10 @@ def _bser_loads_recursive(buf, pos, mutable=True):
         return _py3_bser_loads_recursive(val_type, buf, pos, mutable)
 
 def pdu_len(buf):
-    val = buf[0:2]
+    if PY3 and isinstance(buf, str):
+        buf = bytes(buf, 'ascii')
 
-    # print('pdu_len', val)
-
-    if val != EMPTY_HEADER[0:2]:
+    if buf[0:2] != EMPTY_HEADER[0:2]:
         raise RuntimeError('Invalid BSER header')
 
     expected_len, pos = _bunser_int(buf, 2)
@@ -477,8 +476,10 @@ def pdu_len(buf):
 
 
 def loads(buf, mutable=True):
+    if PY3 and isinstance(buf, str):
+        buf = bytes(buf, 'ascii')
+
     if buf[0:2] != EMPTY_HEADER[0:2]:
-        print('loads', buf[0:2], EMPTY_HEADER[0:2], buf[0:2] == EMPTY_HEADER[0:2])
         raise RuntimeError('Invalid BSER header')
     expected_len, pos = _bunser_int(buf, 2)
     if len(buf) != expected_len + pos:

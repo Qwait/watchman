@@ -194,7 +194,7 @@ class TestSince(WatchmanTestCase.WatchmanTestCase):
 
         res = self.watchmanCommand('query', root, {
             'fields': ['name']})
-        self.assertTrue(res[b'is_fresh_instance'])
+        self.assertTrue(res['is_fresh_instance'])
         self.assertEqual(res['files'], ['111'])
 
         clock = res['clock']

@@ -513,6 +513,13 @@ class BserCodec(Codec):
 
         try:
             res = self._loads(response)
+
+            # normalize res keys to strings
+            if PY3:
+                for key, value in res.items():
+                    if isinstance(key, bytes):
+                        res[key.decode()] = value
+                        res.pop(key)
             return res
         except ValueError as e:
             raise WatchmanError('watchman response decode error: %s' % e)

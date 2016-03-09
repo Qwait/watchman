@@ -15,7 +15,7 @@ class TestCapabilities(WatchmanTestCase.WatchmanTestCase):
 
         res = client.query('version', {
             'optional': ['term-match', 'will-never-exist']})
-        self.assertDictEqual(res[b'capabilities'], {
+        self.assertDictEqual(res['capabilities'], {
             'term-match': True,
             'will-never-exist': False})
 

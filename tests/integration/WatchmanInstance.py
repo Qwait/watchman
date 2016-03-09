@@ -82,7 +82,7 @@ class Instance(object):
         for i in range(1, 10):
             try:
                 client = pywatchman.client(sockpath=self.sock_file)
-                self.pid = client.query('get-pid')[b'pid']
+                self.pid = client.query('get-pid')['pid']
 
                 break
             except Exception as e:

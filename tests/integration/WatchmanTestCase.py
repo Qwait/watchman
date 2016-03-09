@@ -160,8 +160,7 @@ class WatchmanTestCase(unittest.TestCase):
         if relativeRoot:
             expr['relative_root'] = relativeRoot
         res = self.watchmanCommand('query', root, expr)
-
-        files = sorted(res[b'files'])
+        files = sorted(res['files'])
         self.last_file_list = files
         return files
 
